@@ -1420,6 +1420,8 @@ void MDLog::_replay_thread()
 
   // loop
   int r = 0;
+  bool saw_elid = false;
+  bool saw_non_elid = false;
   while (1) {
     auto sleep_time = g_conf().get_val<std::chrono::milliseconds>("mds_delay_journal_replay_for_testing");
     if (unlikely(sleep_time > 0ms)) {
@@ -1501,6 +1503,11 @@ void MDLog::_replay_thread()
     
     // unpack event
     auto le = LogEvent::decode_event(bl.cbegin());
+    if (le && dynamic_cast<ELid*>(le.get())) {
+      saw_elid = true;
+    } else {
+      saw_non_elid = true;
+    }
     if (!le) {
       dout(0) << "_replay " << pos << "~" << bl.length() << " / " << journaler->get_write_pos() 
 	      << " -- unable to decode event" << dendl;
@@ -1593,6 +1600,10 @@ void MDLog::_replay_thread()
     dout(10) << "_replay - complete, " << num_events
 	     << " events" << dendl;
 
+    if (saw_elid && !saw_non_elid) {
+      dout(1) << "_replay - saw only ELid events, marking no events replayed" << dendl;
+      elid_only_journal = true;
+    }
     logger->set(l_mdl_expos, journaler->get_expire_pos());
   }
 

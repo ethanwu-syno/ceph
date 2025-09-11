@@ -2032,7 +2032,7 @@ void MDSRank::rejoin_done()
 
   // funny case: is our cache empty?  no subtrees?
   if (!mdcache->is_subtrees()) {
-    if (whoami == 0) {
+    if (whoami == 0 && !mdlog->is_elid_only_journal()) {
       // The root should always have a subtree!
       clog->error() << "No subtrees found for root MDS rank!";
       damaged();

@@ -138,6 +138,7 @@ public:
 
   bool is_capped() const { return mds_is_shutting_down; }
   void cap();
+  bool is_elid_only_journal() const { return elid_only_journal.load(); }
 
   void kick_submitter();
   void shutdown();
@@ -336,6 +337,7 @@ private:
   // guarded by mds_lock
   std::condition_variable_any cond;
   std::atomic<bool> upkeep_log_trim_shutdown{false};
+  std::atomic<bool> elid_only_journal{false};
 
   std::map<uint64_t, std::vector<Context*>> waiting_for_expire; // protected by mds_lock
 
